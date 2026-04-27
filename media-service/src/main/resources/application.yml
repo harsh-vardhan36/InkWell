@@ -1,0 +1,36 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: media-service
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/inkwell_media?createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY:your-access-key}
+        secret-key: ${AWS_SECRET_KEY:your-secret-key}
+      region:
+        static: ${AWS_REGION:us-east-1}
+      s3:
+        bucket: ${AWS_S3_BUCKET:inkwell-media-bucket}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+  instance:
+    preferIpAddress: true

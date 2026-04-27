@@ -1,0 +1,269 @@
+server:
+  port: ${API_GATEWAY_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth-service
+      - name: Post Service
+        url: /v3/api-docs/post-service
+      - name: Comment Service
+        url: /v3/api-docs/comment-service
+      - name: Category Service
+        url: /v3/api-docs/category-service
+      - name: Media Service
+        url: /v3/api-docs/media-service
+      - name: Newsletter Service
+        url: /v3/api-docs/newsletter-service
+      - name: Notification Service
+        url: /v3/api-docs/notification-service
+      - name: Admin Server
+        url: /v3/api-docs/admin-server
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:file:.env[.properties]
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+            allowedHeaders: "*"
+            exposedHeaders: "Authorization"
+            allowCredentials: true
+            maxAge: 3600
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # ── Auth Service ──────────────────────────────────────
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /auth/**
+                  - /login/**
+                  - /oauth2/**
+                  - /error/**
+                  - /api/auth/**
+                  - /api/login/**
+                  - /api/oauth2/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Post Service ──────────────────────────────────────
+        - id: post-service
+          uri: lb://POST-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /posts/**
+                  - /api/posts/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Comment Service ───────────────────────────────────
+        - id: comment-service
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /comments/**
+                  - /api/comments/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Category & Tag Service ────────────────────────────
+        - id: category-service
+          uri: lb://CATEGORY-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /categories/**
+                  - /tags/**
+                  - /api/categories/**
+                  - /api/tags/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Media Service ─────────────────────────────────────
+        - id: media-service
+          uri: lb://MEDIA-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /media/**
+                  - /api/media/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Newsletter Service ────────────────────────────────
+        - id: newsletter-service
+          uri: lb://NEWSLETTER-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /newsletter/**
+                  - /api/newsletter/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Notification Service ──────────────────────────────
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /notifications/**
+                  - /api/notifications/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+
+        # ── Admin Server ──────────────────────────────────────
+        - id: admin-server
+          uri: lb://ADMIN-SERVER
+          predicates:
+            - name: Path
+              args:
+                patterns:
+                  - /admin/**
+                  - /api/admin/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+
+        # ── Swagger API Docs Aggregation ──────────────────────
+        - id: auth-api-docs
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/v3/api-docs/auth-service
+          filters:
+            - RewritePath=/v3/api-docs/auth-service, /v3/api-docs
+        - id: post-api-docs
+          uri: lb://POST-SERVICE
+          predicates:
+            - Path=/v3/api-docs/post-service
+          filters:
+            - RewritePath=/v3/api-docs/post-service, /v3/api-docs
+        - id: comment-api-docs
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/v3/api-docs/comment-service
+          filters:
+            - RewritePath=/v3/api-docs/comment-service, /v3/api-docs
+        - id: category-api-docs
+          uri: lb://CATEGORY-SERVICE
+          predicates:
+            - Path=/v3/api-docs/category-service
+          filters:
+            - RewritePath=/v3/api-docs/category-service, /v3/api-docs
+        - id: media-api-docs
+          uri: lb://MEDIA-SERVICE
+          predicates:
+            - Path=/v3/api-docs/media-service
+          filters:
+            - RewritePath=/v3/api-docs/media-service, /v3/api-docs
+        - id: newsletter-api-docs
+          uri: lb://NEWSLETTER-SERVICE
+          predicates:
+            - Path=/v3/api-docs/newsletter-service
+          filters:
+            - RewritePath=/v3/api-docs/newsletter-service, /v3/api-docs
+        - id: notification-api-docs
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/v3/api-docs/notification-service
+          filters:
+            - RewritePath=/v3/api-docs/notification-service, /v3/api-docs
+        - id: admin-api-docs
+          uri: lb://ADMIN-SERVER
+          predicates:
+            - Path=/v3/api-docs/admin-server
+          filters:
+            - RewritePath=/v3/api-docs/admin-server, /v3/api-docs
+
+    loadbalancer:
+      retry:
+        enabled: false
+
+# ── Internal secret (injected by JwtAuthenticationFilter GlobalFilter) ──
+internal:
+  secret: ${INTERNAL_SECRET:change-me-in-env}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://${EUREKA_HOST:localhost}:8761/eureka/}
+
+jwt:
+  secret: ${JWT_SECRET:your_jwt_secret_here_make_it_at_least_256_bits_long}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, gateway
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+
+  data:
+    redis:
+      url: ${REDIS_URL:}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

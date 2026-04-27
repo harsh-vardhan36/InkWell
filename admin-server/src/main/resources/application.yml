@@ -1,0 +1,37 @@
+server:
+  port: ${ADMIN_SERVER_PORT:8082}
+
+spring:
+  application:
+    name: admin-server
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:inkwell_admin}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://${EUREKA_HOST:localhost}:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:your_jwt_secret_here_make_it_at_least_256_bits_long}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+internal:
+  secret: ${INTERNAL_SECRET:change-me-in-env}
+
+logging:
+  level:
+    root: INFO
+    com.inkWell.admin: DEBUG

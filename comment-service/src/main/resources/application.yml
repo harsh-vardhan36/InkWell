@@ -1,0 +1,26 @@
+server:
+  port: 8084
+
+internal:
+  secret: ${INTERNAL_SECRET:change-me-in-env}
+
+spring:
+  application:
+    name: comment-service
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/inkwell_comments?createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+  instance:
+    preferIpAddress: true
