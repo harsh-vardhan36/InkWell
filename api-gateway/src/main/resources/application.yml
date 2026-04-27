@@ -177,6 +177,8 @@ spring:
                 patterns:
                   - /admin/**
                   - /api/admin/**
+                  - /admin-server/**
+                  - /api/admin-server/**
           filters:
             - RewritePath=/api/(?<segment>.*), /${segment}
 

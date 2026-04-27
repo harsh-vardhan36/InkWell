@@ -222,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public List<User> searchUsers(String username) {
-        return userRepository.searchByUsername(username);
+        return userRepository.searchUsers(username, null, null);
     }
 
     @Override

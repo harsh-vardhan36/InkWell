@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping({"/admin", "/admin-server"})
 @RequiredArgsConstructor
 public class AdminResource {
 
@@ -30,8 +30,8 @@ public class AdminResource {
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> adminDashboard() {
         Map<String, Object> dashboardData = new HashMap<>();
-        dashboardData.put("totalUsers", authServiceClient.getAllUsers().size());
-        dashboardData.put("totalPosts", postServiceClient.getAllPosts().size());
+        dashboardData.put("users", authServiceClient.getUserStats());
+        dashboardData.put("posts", postServiceClient.getPostStats());
         dashboardData.put("totalComments", commentServiceClient.getAllComments().size());
         return ResponseEntity.ok(dashboardData);
     }
@@ -45,8 +45,11 @@ public class AdminResource {
     // --- User Management ---
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserDto>> manageUsers() {
-        return ResponseEntity.ok(authServiceClient.getAllUsers());
+    public ResponseEntity<List<UserDto>> manageUsers(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String plan) {
+        return ResponseEntity.ok(authServiceClient.getAllUsers(query, role, plan));
     }
 
     @GetMapping("/users/{id}")
@@ -55,22 +58,29 @@ public class AdminResource {
     }
 
     @PutMapping("/users/{id}/role")
-    public ResponseEntity<UserDto> changeUserRole(@PathVariable Long id, @RequestParam String role) {
-        UserDto updated = authServiceClient.updateUserRole(id, role);
-        auditService.logAction("CHANGE_ROLE", "USER", id.toString(), "Changed role to " + role);
+    public ResponseEntity<UserDto> changeUserRole(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        UserDto updated = authServiceClient.updateUserRole(id, payload);
+        auditService.logAction("CHANGE_ROLE", "USER", id.toString(), "Changed role to " + payload.get("role"));
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<UserDto> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        UserDto updated = authServiceClient.updateUserStatus(id, payload);
+        auditService.logAction("UPDATE_STATUS", "USER", id.toString(), "Updated user status");
         return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/users/{id}/suspend")
     public ResponseEntity<UserDto> suspendUser(@PathVariable Long id) {
-        UserDto updated = authServiceClient.updateUserStatus(id, false);
+        UserDto updated = authServiceClient.updateUserStatus(id, Map.of("isActive", false));
         auditService.logAction("SUSPEND", "USER", id.toString(), "Suspended user account");
         return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/users/{id}/reactivate")
     public ResponseEntity<UserDto> reactivateUser(@PathVariable Long id) {
-        UserDto updated = authServiceClient.updateUserStatus(id, true);
+        UserDto updated = authServiceClient.updateUserStatus(id, Map.of("isActive", true));
         auditService.logAction("REACTIVATE", "USER", id.toString(), "Reactivated user account");
         return ResponseEntity.ok(updated);
     }

@@ -47,7 +47,7 @@ class AdminResourceTest {
     @Test
     void shouldReturnUserList() throws Exception {
         List<UserDto> users = new ArrayList<>();
-        when(authServiceClient.getAllUsers()).thenReturn(users);
+        when(authServiceClient.getAllUsers(null, null, null)).thenReturn(users);
 
         mockMvc.perform(get("/admin/users")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -56,8 +56,8 @@ class AdminResourceTest {
 
     @Test
     void shouldReturnAdminDashboard() throws Exception {
-        when(authServiceClient.getAllUsers()).thenReturn(Collections.emptyList());
-        when(postServiceClient.getAllPosts()).thenReturn(Collections.emptyList());
+        when(authServiceClient.getUserStats()).thenReturn(Collections.emptyMap());
+        when(postServiceClient.getPostStats()).thenReturn(Collections.emptyMap());
         when(commentServiceClient.getAllComments()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/admin/dashboard")

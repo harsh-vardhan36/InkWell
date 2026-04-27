@@ -46,4 +46,14 @@ public class PostAdminResource {
         postRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getPostStats() {
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalPosts", postRepository.count());
+        stats.put("publishedPosts", postRepository.countByStatus(com.inkWell.post.domain.enums.PostStatus.PUBLISHED));
+        stats.put("draftPosts", postRepository.countByStatus(com.inkWell.post.domain.enums.PostStatus.DRAFT));
+        stats.put("featuredPosts", postRepository.countByIsFeaturedTrue());
+        return ResponseEntity.ok(stats);
+    }
 }

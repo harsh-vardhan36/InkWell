@@ -11,16 +11,23 @@ import java.util.Map;
 public interface AuthServiceClient {
 
     @GetMapping("/users")
-    List<UserDto> getAllUsers();
+    List<UserDto> getAllUsers(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "plan", required = false) String plan
+    );
+
+    @GetMapping("/stats")
+    Map<String, Long> getUserStats();
 
     @GetMapping("/users/{id}")
     UserDto getUserById(@PathVariable("id") Long id);
 
     @PutMapping("/users/{id}/role")
-    UserDto updateUserRole(@PathVariable("id") Long id, @RequestParam("role") String role);
+    UserDto updateUserRole(@PathVariable("id") Long id, @RequestBody Map<String, String> payload);
 
     @PutMapping("/users/{id}/status")
-    UserDto updateUserStatus(@PathVariable("id") Long id, @RequestParam("active") boolean active);
+    UserDto updateUserStatus(@PathVariable("id") Long id, @RequestBody Map<String, Object> payload);
 
     @DeleteMapping("/users/{id}")
     Map<String, String> deleteUser(@PathVariable("id") Long id);

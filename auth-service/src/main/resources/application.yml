@@ -9,6 +9,12 @@ internal:
 
 oauth2:
   redirect-url: ${OAUTH2_REDIRECT_URL:http://localhost:4200/oauth2/redirect}
+
+initial:
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+
 spring:
   application:
     name: auth-service

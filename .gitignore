@@ -3,20 +3,36 @@
 *.class
 *.jar
 *.war
+*.ear
 
 # === Environment variables — NEVER commit these ===
 .env
 **/.env
+.env.*
 
 # === IDE files ===
 .idea/
 *.iml
 .vscode/
 *.DS_Store
+.project
+.classpath
+.settings/
+.factorypath
+.nb-configuration.xml
 
 # === Logs ===
 *.log
 logs/
 
+# === Documentation ===
+# Un-ignoring documentation as it is helpful for the repository
+# Backend.md
+# Frontend.md
+# projectdocumentation.md
+# implementation.md
+
 # === Maven wrapper ===
 !.mvn/wrapper/maven-wrapper.jar
+!mvnw
+!mvnw.cmd

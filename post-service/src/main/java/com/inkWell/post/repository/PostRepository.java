@@ -16,6 +16,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findBySlug(String slug);
     List<Post> findAllByStatus(PostStatus status);
     List<Post> findAllByAuthorId(Long authorId);
+    
+    long countByStatus(PostStatus status);
+    long countByIsFeaturedTrue();
 
     @Modifying
     @Transactional

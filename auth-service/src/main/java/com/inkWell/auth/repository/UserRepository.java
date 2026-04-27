@@ -1,6 +1,7 @@
 package com.inkWell.auth.repository;
 
 import com.inkWell.auth.domain.entity.User;
+import com.inkWell.auth.domain.enums.Plan;
 import com.inkWell.auth.domain.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,8 +23,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findAllByRole(Role role);
     
-    @Query("SELECT u FROM User u WHERE u.username LIKE %:username%")
-    List<User> searchByUsername(String username);
-    
+    @Query("SELECT u FROM User u WHERE " +
+           "(:query IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(u.fullName) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+           "(:role IS NULL OR u.role = :role) AND " +
+           "(:plan IS NULL OR u.plan = :plan)")
+    List<User> searchUsers(String query, Role role, Plan plan);
+
     void deleteByUserId(Long userId);
 }
