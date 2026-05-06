@@ -1,7 +1,6 @@
 package com.inkWell.api_gateway.filter;
 
 import com.inkWell.api_gateway.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -21,19 +20,31 @@ import java.util.List;
 
 /**
  * Reactive GlobalFilter for Spring Cloud Gateway (WebFlux).
- * Validates JWT for all routes EXCEPT public ones.
- * Also injects X-Internal-Secret header so downstream services
- * know the request came through the gateway and not directly.
+ * This filter is responsible for:
+ * <ul>
+ *     <li>Validating JWT tokens for protected routes.</li>
+ *     <li>Allowing anonymous access to public routes (auth, public posts, etc.).</li>
+ *     <li>Injecting an internal secret header (X-Internal-Secret) to verify gateway origin for downstream services.</li>
+ * </ul>
  */
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     private final JwtUtil jwtUtil;
 
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
+    /**
+     * Shared secret key used to identify requests originating from this gateway.
+     */
     @Value("${internal.secret:change-me-in-env}")
     private String internalSecret;
 
+    /**
+     * List of path prefixes that do not require authentication for any HTTP method.
+     */
     private static final List<String> PUBLIC_PREFIXES = List.of(
             "/api/auth/login",
             "/auth/login",
@@ -60,6 +71,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/v3/api-docs/",
             "/webjars/");
 
+    /**
+     * List of path prefixes that do not require authentication for GET requests.
+     */
     private static final List<String> PUBLIC_GET_PREFIXES = List.of(
             "/api/posts",
             "/posts",
@@ -68,6 +82,13 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/categories",
             "/categories");
 
+    /**
+     * Main filtering logic for incoming requests.
+     * 
+     * @param exchange The current server web exchange.
+     * @param chain The gateway filter chain.
+     * @return A {@link Mono<Void>} representing the completion of the request.
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();

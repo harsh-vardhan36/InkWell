@@ -1,0 +1,218 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: inkwell-rabbitmq
+    restart: always
+    ports: [ "5672:5672", "15672:15672" ]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  eureka-server:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-eureka-server:latest
+    container_name: inkwell-eureka
+    restart: always
+    ports: [ "8761:8761" ]
+    environment:
+      - JAVA_OPTS=-Xmx160m
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  api-gateway:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-api-gateway:latest
+    container_name: inkwell-gateway
+    restart: always
+    ports: [ "8080:8080" ]
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - EUREKA_HOST=eureka-server
+      - REDIS_URL=redis://<redis-username>:<redis-password>@<redis-host>:<redis-port>
+      - JWT_SECRET=<your-jwt-secret-string>
+      - INTERNAL_SECRET=<your-internal-secret-string>
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  auth-service:
+    build: ./auth-service
+    container_name: inkwell-auth
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_auth
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - REDIS_URL=redis://<redis-username>:<redis-password>@<redis-host>:<redis-port>
+      - RABBIT_HOST=rabbitmq
+      - EUREKA_HOST=eureka-server
+      - ADMIN_EMAIL=<admin-login-email>
+      - ADMIN_PASSWORD=<admin-login-password>
+      - JWT_SECRET=<your-jwt-secret-string>
+      - INTERNAL_SECRET=<your-internal-secret-string>
+      - GOOGLE_CLIENT_ID=<google-client-id>
+      - GOOGLE_CLIENT_SECRET=<google-client-secret>
+      - GITHUB_CLIENT_ID=<github-client-id>
+      - GITHUB_CLIENT_SECRET=<github-client-secret>
+      - RAZORPAY_KEY_ID=<razorpay-key-id>
+      - RAZORPAY_KEY_SECRET=<razorpay-key-secret>
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  post-service:
+    build: ./post-service
+    container_name: inkwell-posts
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_posts
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - EUREKA_HOST=eureka-server
+      - RABBIT_HOST=rabbitmq
+      - REDIS_URL=redis://<redis-username>:<redis-password>@<redis-host>:<redis-port>
+      - LIQUIBASE_ENABLED=false
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  comment-service:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-comment-service:latest
+    container_name: inkwell-comments
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_comments
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - EUREKA_HOST=eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  notification-service:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-notification-service:latest
+    container_name: inkwell-notifications
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_notifications
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - RABBIT_HOST=rabbitmq
+      - EUREKA_HOST=eureka-server
+      - MAIL_USERNAME=<smtp-email-username>
+      - MAIL_PASSWORD=<smtp-16-character-app-password>
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  admin-server:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-admin-server:latest
+    container_name: inkwell-admin
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_admin
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - EUREKA_HOST=eureka-server
+      - JWT_SECRET=<your-jwt-secret-string>
+      - INTERNAL_SECRET=<your-internal-secret-string>
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  newsletter-service:
+    build: ./newsletter-service
+    container_name: inkwell-newsletter
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_newsletter
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - EUREKA_HOST=eureka-server
+      - RABBIT_HOST=rabbitmq
+      - LIQUIBASE_ENABLED=false
+      - MAIL_USERNAME=<smtp-email-username>
+      - MAIL_PASSWORD=<smtp-16-character-app-password>
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  category-service:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-category-service:latest
+    container_name: inkwell-categories
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_categories
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - EUREKA_HOST=eureka-server
+      - RABBIT_HOST=rabbitmq
+      - LIQUIBASE_ENABLED=false
+      - SPRING_LIQUIBASE_ENABLED=false
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  media-service:
+    image: 596717729167.dkr.ecr.ap-south-1.amazonaws.com/inkwell-media-service:latest
+    container_name: inkwell-media
+    restart: always
+    environment:
+      - JAVA_OPTS=-Xmx160m
+      - DB_HOST=<database-host-endpoint>
+      - DB_NAME=inkwell_media
+      - DB_USERNAME=<database-username>
+      - DB_PASSWORD=<database-password>
+      - EUREKA_HOST=eureka-server
+      - RABBIT_HOST=rabbitmq
+      - LIQUIBASE_ENABLED=false
+      - SPRING_LIQUIBASE_ENABLED=false
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - AWS_ACCESS_KEY=<aws-access-key>
+      - AWS_SECRET_KEY=<aws-secret-key>
+      - AWS_REGION=<aws-region-name>
+      - AWS_S3_BUCKET=<aws-s3-bucket-name>
+    deploy:
+      resources:
+        limits:
+          memory: 256M

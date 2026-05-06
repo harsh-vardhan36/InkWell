@@ -47,4 +47,44 @@ public class Comment {
 
     @Builder.Default
     private int likes = 0;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getPostId() { return postId; }
+    public void setPostId(Long postId) { this.postId = postId; }
+    public Long getAuthorId() { return authorId; }
+    public void setAuthorId(Long authorId) { this.authorId = authorId; }
+    public String getAuthorName() { return authorName; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public Long getParentCommentId() { return parentCommentId; }
+    public void setParentCommentId(Long parentCommentId) { this.parentCommentId = parentCommentId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public CommentStatus getStatus() { return status; }
+    public void setStatus(CommentStatus status) { this.status = status; }
+    public boolean isApproved() { return isApproved; }
+    public void setApproved(boolean isApproved) { this.isApproved = isApproved; }
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean isDeleted) { this.isDeleted = isDeleted; }
+    public int getLikes() { return likes; }
+    public void setLikes(int likes) { this.likes = likes; }
+
+    public static CommentBuilder builder() {
+        return new CommentBuilder();
+    }
+
+    public static class CommentBuilder {
+        private Comment comment = new Comment();
+        public CommentBuilder id(Long id) { comment.id = id; return this; }
+        public CommentBuilder postId(Long postId) { comment.postId = postId; return this; }
+        public CommentBuilder authorId(Long authorId) { comment.authorId = authorId; return this; }
+        public CommentBuilder authorName(String authorName) { comment.authorName = authorName; return this; }
+        public CommentBuilder content(String content) { comment.content = content; return this; }
+        public CommentBuilder parentCommentId(Long parentCommentId) { comment.parentCommentId = parentCommentId; return this; }
+        public CommentBuilder status(CommentStatus status) { comment.status = status; return this; }
+        public CommentBuilder isApproved(boolean isApproved) { comment.isApproved = isApproved; return this; }
+        public Comment build() { return comment; }
+    }
 }

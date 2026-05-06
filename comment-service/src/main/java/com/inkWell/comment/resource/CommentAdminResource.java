@@ -4,7 +4,6 @@ import com.inkWell.comment.domain.entity.Comment;
 import com.inkWell.comment.domain.enums.CommentStatus;
 import com.inkWell.comment.repository.CommentRepository;
 import com.inkWell.comment.service.CommentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +12,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/comments/admin")
-@RequiredArgsConstructor
 public class CommentAdminResource {
 
     private final CommentRepository commentRepository;
     private final CommentService commentService;
+
+    public CommentAdminResource(CommentRepository commentRepository, CommentService commentService) {
+        this.commentRepository = commentRepository;
+        this.commentService = commentService;
+    }
 
     @GetMapping("/pending")
     public ResponseEntity<List<Comment>> getPendingComments() {

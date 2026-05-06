@@ -9,27 +9,51 @@ import com.inkWell.auth.exception.UserAlreadyExistsException;
 import com.inkWell.auth.repository.UserRepository;
 import com.inkWell.auth.security.JwtUtil;
 import com.inkWell.auth.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Service
-@RequiredArgsConstructor
 @org.springframework.transaction.annotation.Transactional
 public class AuthServiceImpl implements AuthService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RabbitTemplate rabbitTemplate;
     private final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
+    private final com.inkWell.auth.repository.FollowRepository followRepository;
+    private final org.springframework.web.client.RestTemplate restTemplate;
+
+    public AuthServiceImpl(UserRepository userRepository, 
+                           PasswordEncoder passwordEncoder, 
+                           JwtUtil jwtUtil, 
+                           RabbitTemplate rabbitTemplate, 
+                           org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate, 
+                           com.inkWell.auth.repository.FollowRepository followRepository, 
+                           org.springframework.web.client.RestTemplate restTemplate) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.rabbitTemplate = rabbitTemplate;
+        this.redisTemplate = redisTemplate;
+        this.followRepository = followRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    @Value("${internal.secret}")
+    private String internalSecret;
+
+    @Value("${newsletter.service.url:http://newsletter-service:8087}")
+    private String newsletterServiceUrl;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -342,10 +366,99 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String generateOTP() {
-        return String.valueOf(new Random().nextInt(900000) + 100000);
+        return String.valueOf(SECURE_RANDOM.nextInt(900000) + 100000);
     }
 
     private String generate4DigitOTP() {
-        return String.valueOf(new Random().nextInt(9000) + 1000);
+        return String.valueOf(SECURE_RANDOM.nextInt(9000) + 1000);
+    }
+
+    @Override
+    public void followUser(Long followerId, Long followedId) {
+        if (followerId.equals(followedId)) {
+            throw new RuntimeException("You cannot follow yourself");
+        }
+        if (!followRepository.existsByFollowerIdAndFollowedId(followerId, followedId)) {
+            com.inkWell.auth.domain.entity.Follow follow = com.inkWell.auth.domain.entity.Follow.builder()
+                    .followerId(followerId)
+                    .followedId(followedId)
+                    .status("PENDING")
+                    .build();
+            followRepository.save(follow);
+        }
+    }
+
+    @Override
+    public void unfollowUser(Long followerId, Long followedId) {
+        followRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
+    @Override
+    public boolean isFollowing(Long followerId, Long followedId) {
+        if (followerId == null || followedId == null) return false;
+        return followRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
+    @Override
+    public long getFollowerCount(Long userId) {
+        return followRepository.countByFollowedId(userId);
+    }
+
+    @Override
+    public long getFollowingCount(Long userId) {
+        return followRepository.countByFollowerId(userId);
+    }
+
+    @Override
+    public List<User> getFollowers(Long userId) {
+        List<com.inkWell.auth.domain.entity.Follow> follows = followRepository.findAllByFollowedId(userId);
+        List<Long> followerIds = follows.stream()
+                .map(com.inkWell.auth.domain.entity.Follow::getFollowerId)
+                .toList();
+        return userRepository.findAllById(followerIds);
+    }
+
+    @Override
+    public void approveFollow(Long followerId, Long followedId) {
+        com.inkWell.auth.domain.entity.Follow follow = followRepository.findByFollowerIdAndFollowedId(followerId, followedId)
+                .orElseThrow(() -> new RuntimeException("Follow request not found"));
+        
+        follow.setStatus("ACCEPTED");
+        followRepository.save(follow);
+
+        // Sync with Newsletter service
+        try {
+            User follower = userRepository.findById(followerId).orElse(null);
+            if (follower != null) {
+                String baseUrl = newsletterServiceUrl;
+                if ("http://newsletter-service:8087".equals(baseUrl)) {
+                    try {
+                        java.net.InetAddress.getByName("newsletter-service");
+                    } catch (java.net.UnknownHostException e) {
+                        baseUrl = "http://localhost:8087";
+                    }
+                }
+                String newsletterUrl = baseUrl + "/newsletter/subscribe?email=" + follower.getEmail();
+                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                headers.set("X-Internal-Secret", internalSecret);
+                org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+                restTemplate.postForEntity(newsletterUrl, entity, String.class);
+                log.info("Synced follower {} to newsletter service", follower.getEmail());
+            }
+        } catch (Exception e) {
+            log.error("Failed to sync with newsletter service: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void rejectFollow(Long followerId, Long followedId) {
+        followRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
+    @Override
+    public String getFollowStatus(Long followerId, Long followedId) {
+        return followRepository.findByFollowerIdAndFollowedId(followerId, followedId)
+                .map(com.inkWell.auth.domain.entity.Follow::getStatus)
+                .orElse("NONE");
     }
 }

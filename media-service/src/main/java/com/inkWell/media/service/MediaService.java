@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface MediaService {
     Media uploadMedia(MultipartFile file, Long uploaderId) throws IOException;
+    Media uploadFromUrl(String url, Long uploaderId) throws IOException;
     Optional<Media> getMediaById(Long id);
     List<Media> getMediaByUploader(Long uploaderId);
     List<Media> getMediaByPost(Long postId);

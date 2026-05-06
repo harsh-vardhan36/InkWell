@@ -23,4 +23,10 @@ public class UserProfileResponse {
     private String bio;
     private String avatarUrl;
     private String contactNumber;
+    private long followerCount;
+    private long followingCount;
+    private long storyCount;
+    private long totalReads;
+    private boolean isFollowing;
+    private String followStatus;
 }

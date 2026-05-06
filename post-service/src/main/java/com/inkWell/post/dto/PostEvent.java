@@ -16,4 +16,5 @@ public class PostEvent implements Serializable {
     private String title;
     private String authorName;
     private String categoryName;
+    private String slug;
 }

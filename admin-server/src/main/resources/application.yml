@@ -9,9 +9,15 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root123}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    database-changelog-table: admin_changelog
+    database-changelog-lock-table: admin_changelog_lock
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:

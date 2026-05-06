@@ -118,6 +118,8 @@ public class AuthResource {
             .provider(user.getProvider().name())
             .isActive(user.isActive())
             .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
+            .followerCount(authService.getFollowerCount(user.getUserId()))
+            .followingCount(authService.getFollowingCount(user.getUserId()))
             .build());
     }
 
@@ -135,7 +137,75 @@ public class AuthResource {
             .role(user.getRole().name())
             .isActive(user.isActive())
             .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
+            .followerCount(authService.getFollowerCount(user.getUserId()))
+            .followingCount(authService.getFollowingCount(user.getUserId()))
             .build());
+    }
+
+    @GetMapping("/followers")
+    public ResponseEntity<List<UserProfileResponse>> getFollowers(HttpServletRequest request) {
+        User user = getAuthenticatedUser(request);
+        List<User> followers = authService.getFollowers(user.getUserId());
+        List<UserProfileResponse> response = followers.stream()
+            .map(u -> {
+                String status = "PENDING";
+                try {
+                    status = authService.getFollowStatus(u.getUserId(), user.getUserId());
+                } catch (Exception e) {}
+                
+                return UserProfileResponse.builder()
+                    .userId(u.getUserId())
+                    .username(u.getUsername())
+                    .email(u.getEmail())
+                    .fullName(u.getFullName())
+                    .avatarUrl(u.getAvatarUrl())
+                    .bio(u.getBio())
+                    .createdAt(u.getCreatedAt() != null ? u.getCreatedAt().toString() : null)
+                    .isActive(u.isActive())
+                    .role(u.getRole().name())
+                    .followStatus(status)
+                    .build();
+            })
+            .toList();
+        return ResponseEntity.ok(response);
+    }
+
+@PostMapping("/follow/{userId}")
+public ResponseEntity<Map<String, String>> followUser(HttpServletRequest request, @PathVariable Long userId) {
+    User follower = getAuthenticatedUser(request);
+    authService.followUser(follower.getUserId(), userId);
+    return ResponseEntity.ok(Map.of("message", "Followed successfully"));
+}
+
+@PostMapping("/unfollow/{userId}")
+public ResponseEntity<Map<String, String>> unfollowUser(HttpServletRequest request, @PathVariable Long userId) {
+    User follower = getAuthenticatedUser(request);
+    authService.unfollowUser(follower.getUserId(), userId);
+    return ResponseEntity.ok(Map.of("message", "Unfollowed successfully"));
+}
+
+@GetMapping("/is-following/{userId}")
+public ResponseEntity<Map<String, Boolean>> isFollowing(HttpServletRequest request, @PathVariable Long userId) {
+    try {
+        User follower = getAuthenticatedUser(request);
+        boolean following = authService.isFollowing(follower.getUserId(), userId);
+        return ResponseEntity.ok(Map.of("following", following));
+    } catch (Exception e) {
+        return ResponseEntity.ok(Map.of("following", false));
+    }
+}
+    @PostMapping("/follow/{followerId}/approve")
+    public ResponseEntity<Map<String, String>> approveFollow(HttpServletRequest request, @PathVariable Long followerId) {
+        User author = getAuthenticatedUser(request);
+        authService.approveFollow(followerId, author.getUserId());
+        return ResponseEntity.ok(Map.of("message", "Follow request approved"));
+    }
+
+    @PostMapping("/follow/{followerId}/reject")
+    public ResponseEntity<Map<String, String>> rejectFollow(HttpServletRequest request, @PathVariable Long followerId) {
+        User author = getAuthenticatedUser(request);
+        authService.rejectFollow(followerId, author.getUserId());
+        return ResponseEntity.ok(Map.of("message", "Follow request rejected"));
     }
 
     @PutMapping("/profile")
@@ -155,9 +225,20 @@ public class AuthResource {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<User>> searchUsers(@RequestParam String username) {
+    public ResponseEntity<List<UserProfileResponse>> searchUsers(@RequestParam String username) {
         List<User> users = authService.searchUsers(username);
-        return ResponseEntity.ok(users);
+        List<UserProfileResponse> response = users.stream()
+            .map(u -> UserProfileResponse.builder()
+                .userId(u.getUserId())
+                .username(u.getUsername())
+                .fullName(u.getFullName())
+                .avatarUrl(u.getAvatarUrl())
+                .bio(u.getBio())
+                .isActive(u.isActive())
+                .role(u.getRole().name())
+                .build())
+            .toList();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/deactivate/request")

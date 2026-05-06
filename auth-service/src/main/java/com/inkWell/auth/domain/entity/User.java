@@ -9,57 +9,112 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entity representing a system user.
+ * Stores authentication details, profile information, and subscription plans.
+ */
 @Entity
 @Table(name = "users")
 public class User {
 
+    /**
+     * Unique identifier for the user.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long userId;
 
+    /**
+     * Unique username for the user.
+     */
     @Column(nullable = false, unique = true)
     private String username;
 
+    /**
+     * Unique email address for the user.
+     */
     @Column(nullable = false, unique = true)
     private String email;
 
+    /**
+     * BCrypt hashed password.
+     */
     @Column(nullable = false)
     private String passwordHash;
 
+    /**
+     * Full name of the user.
+     */
     @Column(nullable = false)
     private String fullName;
 
+    /**
+     * Role of the user in the system (e.g., ADMIN, USER, AUTHOR).
+     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
     
+    /**
+     * Brief biography of the user.
+     */
     private String bio;
     
+    /**
+     * URL to the user's profile picture.
+     */
     private String avatarUrl;
 
+    /**
+     * User's contact phone number.
+     */
     private String contactNumber;
 
+    /**
+     * Current subscription plan (FREE, PRO).
+     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Plan plan = Plan.FREE;
 
+    /**
+     * Expiration timestamp for the current plan.
+     */
     private LocalDateTime planExpiry;
 
+    /**
+     * Authentication provider (LOCAL, GOOGLE, GITHUB).
+     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Provider provider;
 
+    /**
+     * Whether the user account is currently active.
+     */
     @Column(nullable = false)
     private boolean isActive;
 
+    /**
+     * Token used for password reset flows.
+     */
     private String resetToken;
 
+    /**
+     * Expiration timestamp for the reset token.
+     */
     private LocalDateTime resetTokenExpiry;
 
+    /**
+     * Timestamp when the user record was created.
+     */
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    /**
+     * Timestamp when the user record was last updated.
+     */
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

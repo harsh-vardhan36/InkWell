@@ -1,6 +1,7 @@
 package com.inkWell.media.resource;
 
 import com.inkWell.media.domain.entity.Media;
+import com.inkWell.media.dto.MediaDTO;
 import com.inkWell.media.service.MediaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,17 @@ public class MediaResource {
     private final MediaService mediaService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Media> uploadMedia(
+    public ResponseEntity<MediaDTO> uploadMedia(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) throws IOException {
-        return ResponseEntity.ok(mediaService.uploadMedia(file, userId));
+        return ResponseEntity.ok(convertToDTO(mediaService.uploadMedia(file, userId)));
+    }
+
+    @PostMapping("/upload-url")
+    public ResponseEntity<MediaDTO> uploadFromUrl(
+            @RequestParam("url") String url,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) throws IOException {
+        return ResponseEntity.ok(convertToDTO(mediaService.uploadFromUrl(url, userId)));
     }
 
     @DeleteMapping("/{id}")
@@ -30,8 +38,8 @@ public class MediaResource {
     }
 
     @PutMapping("/{id}/alt")
-    public ResponseEntity<Media> updateAltText(@PathVariable Long id, @RequestParam String altText) {
-        return ResponseEntity.ok(mediaService.updateAltText(id, altText));
+    public ResponseEntity<MediaDTO> updateAltText(@PathVariable Long id, @RequestParam String altText) {
+        return ResponseEntity.ok(convertToDTO(mediaService.updateAltText(id, altText)));
     }
 
     @PutMapping("/{id}/link/{postId}")
@@ -41,7 +49,24 @@ public class MediaResource {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<java.util.List<Media>> getMediaByUploader(@PathVariable Long userId) {
-        return ResponseEntity.ok(mediaService.getMediaByUploader(userId));
+    public ResponseEntity<java.util.List<MediaDTO>> getMediaByUploader(@PathVariable Long userId) {
+        return ResponseEntity.ok(mediaService.getMediaByUploader(userId).stream()
+                .map(this::convertToDTO)
+                .toList());
+    }
+
+    private MediaDTO convertToDTO(Media media) {
+        return MediaDTO.builder()
+                .id(media.getId())
+                .fileUrl(media.getFileUrl())
+                .fileName(media.getFileName())
+                .originalName(media.getOriginalName())
+                .mimeType(media.getMimeType())
+                .sizeKb(media.getSizeKb())
+                .uploaderId(media.getUploaderId())
+                .altText(media.getAltText())
+                .linkedPostId(media.getLinkedPostId())
+                .uploadedAt(media.getUploadedAt())
+                .build();
     }
 }

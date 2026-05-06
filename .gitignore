@@ -25,12 +25,16 @@
 *.log
 logs/
 
-# === Documentation ===
-# Un-ignoring documentation as it is helpful for the repository
-# Backend.md
-# Frontend.md
-# projectdocumentation.md
-# implementation.md
+# === Excludes for feature/UC1 ===
+docker-compose.yml
+deploy-to-aws.sh
+run-sonar.sh
+*.pem
+*.md
+!README.md
+!Readme.md
+!Readme.MD
+!README.MD
 
 # === Maven wrapper ===
 !.mvn/wrapper/maven-wrapper.jar

@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * Data Transfer Object representing a post-published event.
+ * Received from RabbitMQ when a new post is published in the post-service.
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,4 +20,5 @@ public class PostEvent implements Serializable {
     private String title;
     private String authorName;
     private String categoryName;
+    private String slug;
 }

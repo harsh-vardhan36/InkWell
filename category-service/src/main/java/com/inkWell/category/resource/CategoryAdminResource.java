@@ -4,7 +4,6 @@ import com.inkWell.category.domain.entity.Category;
 import com.inkWell.category.domain.entity.Tag;
 import com.inkWell.category.repository.CategoryRepository;
 import com.inkWell.category.repository.TagRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,12 +12,17 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/categories/admin")
-@RequiredArgsConstructor
 public class CategoryAdminResource {
 
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final com.inkWell.category.service.CategoryService categoryService;
+
+    public CategoryAdminResource(CategoryRepository categoryRepository, TagRepository tagRepository, com.inkWell.category.service.CategoryService categoryService) {
+        this.categoryRepository = categoryRepository;
+        this.tagRepository = tagRepository;
+        this.categoryService = categoryService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {

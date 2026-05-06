@@ -15,7 +15,9 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findBySlug(String slug);
     List<Post> findAllByStatus(PostStatus status);
+    List<Post> findTop10ByStatusOrderByCreatedAtDesc(PostStatus status);
     List<Post> findAllByAuthorId(Long authorId);
+    List<Post> findAllByCategoryIdAndStatus(Long categoryId, PostStatus status);
     
     long countByStatus(PostStatus status);
     long countByIsFeaturedTrue();

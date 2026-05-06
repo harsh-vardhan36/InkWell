@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -21,6 +22,7 @@ public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepository;
     private final S3Client s3Client;
+    private final org.springframework.web.client.RestTemplate restTemplate;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucketName;
@@ -48,6 +50,41 @@ public class MediaServiceImpl implements MediaService {
                 .fileUrl(fileUrl)
                 .mimeType(file.getContentType())
                 .sizeKb(file.getSize() / 1024)
+                .uploaderId(uploaderId)
+                .isDeleted(false)
+                .build();
+
+        return mediaRepository.save(media);
+    }
+
+    @Override
+    public Media uploadFromUrl(String url, Long uploaderId) throws IOException {
+        ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new IOException("Failed to fetch image from URL: " + url);
+        }
+
+        byte[] bytes = response.getBody();
+        String contentType = response.getHeaders().getContentType() != null ? response.getHeaders().getContentType().toString() : "image/jpeg";
+        String extension = contentType.contains("/") ? contentType.split("/")[1] : "jpg";
+        String fileName = UUID.randomUUID().toString() + "." + extension;
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes));
+
+        String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileName);
+
+        Media media = Media.builder()
+                .fileName(fileName)
+                .originalName("url_upload_" + fileName)
+                .fileUrl(fileUrl)
+                .mimeType(contentType)
+                .sizeKb((long) (bytes.length / 1024))
                 .uploaderId(uploaderId)
                 .isDeleted(false)
                 .build();

@@ -3,7 +3,7 @@ server:
   address: 0.0.0.0
 
 
-# ✅ ADD these two:
+#  ADD these two:
 internal:
   secret: ${INTERNAL_SECRET:change-me-in-env}
 
@@ -39,9 +39,15 @@ spring:
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    database-changelog-table: auth_changelog
+    database-changelog-lock-table: auth_changelog_lock
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -81,3 +87,14 @@ razorpay:
   key:
     id: ${RAZORPAY_KEY_ID:rzp_test_PLACEHOLDER}
     secret: ${RAZORPAY_KEY_SECRET:PLACEHOLDER_SECRET}
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://${ZIPKIN_HOST:localhost}:9411/api/v2/spans"
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus

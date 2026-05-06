@@ -63,6 +63,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Post Service ──────────────────────────────────────
         - id: post-service
@@ -80,6 +84,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Comment Service ───────────────────────────────────
         - id: comment-service
@@ -97,6 +105,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Category & Tag Service ────────────────────────────
         - id: category-service
@@ -116,6 +128,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Media Service ─────────────────────────────────────
         - id: media-service
@@ -133,23 +149,22 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Newsletter Service ────────────────────────────────
         - id: newsletter-service
           uri: lb://NEWSLETTER-SERVICE
           predicates:
-            - name: Path
-              args:
-                patterns:
-                  - /newsletter/**
-                  - /api/newsletter/**
+            - Path=/newsletter/**, /api/newsletter/**
           filters:
             - RewritePath=/api/(?<segment>.*), /${segment}
-            - name: RequestRateLimiter
+            - name: CircuitBreaker
               args:
-                redis-rate-limiter.replenishRate: 5
-                redis-rate-limiter.burstCapacity: 10
-                key-resolver: "#{@ipKeyResolver}"
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Notification Service ──────────────────────────────
         - id: notification-service
@@ -167,6 +182,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Admin Server ──────────────────────────────────────
         - id: admin-server
@@ -181,6 +200,10 @@ spring:
                   - /api/admin-server/**
           filters:
             - RewritePath=/api/(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback
 
         # ── Swagger API Docs Aggregation ──────────────────────
         - id: auth-api-docs
@@ -249,10 +272,16 @@ jwt:
   secret: ${JWT_SECRET:your_jwt_secret_here_make_it_at_least_256_bits_long}
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "http://${ZIPKIN_HOST:localhost}:9411/api/v2/spans"
   endpoints:
     web:
       exposure:
-        include: health, gateway
+        include: health, gateway, prometheus
   endpoint:
     gateway:
       enabled: true

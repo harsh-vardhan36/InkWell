@@ -2,16 +2,21 @@ package com.inkWell.category.service;
 
 import com.inkWell.category.domain.entity.Category;
 import com.inkWell.category.repository.CategoryRepository;
-import lombok.RequiredArgsConstructor;
+import com.inkWell.category.repository.TagRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final TagRepository tagRepository;
+
+    public CategoryService(CategoryRepository categoryRepository, TagRepository tagRepository) {
+        this.categoryRepository = categoryRepository;
+        this.tagRepository = tagRepository;
+    }
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
@@ -35,7 +40,6 @@ public class CategoryService {
     }
 
     // --- Tag Methods ---
-    private final com.inkWell.category.repository.TagRepository tagRepository;
 
     public List<com.inkWell.category.domain.entity.Tag> getAllTags() {
         return tagRepository.findAll();
