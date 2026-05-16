@@ -1,7 +1,6 @@
 package com.inkWell.notification.resource;
 
 import com.inkWell.notification.domain.entity.Notification;
-import com.inkWell.notification.domain.enums.NotificationType;
 import com.inkWell.notification.dto.NotificationDTO;
 import com.inkWell.notification.service.NotificationService;
 import org.springframework.http.ResponseEntity;

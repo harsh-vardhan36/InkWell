@@ -31,10 +31,23 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, Long> {
     Optional<Subscriber> findByConfirmationToken(String token);
 
     /**
-     * Finds all subscribers with a specific subscription status.
+     * Finds all subscribers with a specific subscription status and author.
      * 
      * @param status The {@link SubscriptionStatus} to filter by.
+     * @param authorId The author ID.
      * @return A list of matching subscribers.
      */
+    List<Subscriber> findAllByStatusAndAuthorId(SubscriptionStatus status, Long authorId);
+
+    /**
+     * Counts active subscribers for a specific author.
+     */
+    long countByStatusAndAuthorId(SubscriptionStatus status, Long authorId);
+
+    /**
+     * Finds a subscriber by email and authorId.
+     */
+    Optional<Subscriber> findByEmailAndAuthorId(String email, Long authorId);
+
     List<Subscriber> findAllByStatus(SubscriptionStatus status);
 }

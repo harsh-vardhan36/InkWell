@@ -32,7 +32,7 @@ class NewsletterResourceTest {
 
     @Test
     void shouldGetActiveSubscribers() throws Exception {
-        when(newsletterService.getActiveSubscribers()).thenReturn(List.of(new Subscriber()));
+        when(newsletterService.getActiveSubscribers(null)).thenReturn(List.of(new Subscriber()));
         mockMvc.perform(get("/newsletter/subscribers"))
                 .andExpect(status().isOk());
     }
@@ -40,7 +40,8 @@ class NewsletterResourceTest {
     @Test
     void shouldSubscribe() throws Exception {
         mockMvc.perform(post("/newsletter/subscribe")
-                .param("email", "test@example.com"))
+                .param("email", "test@example.com")
+                .param("authorId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Subscribed successfully"));
     }

@@ -33,7 +33,7 @@ public class NewsletterConsumer {
         String postLink = "http://localhost:4200/blog/" + (event.getSlug() != null ? event.getSlug() : event.getPostId());
         
         try {
-            newsletterService.notifyNewPost(event.getTitle(), postLink);
+            newsletterService.notifyNewPost(event.getTitle(), postLink, event.getAuthorId());
             log.info("Successfully processed newsletter campaign for post ID: {}", event.getPostId());
         } catch (Exception e) {
             log.error("Failed to process newsletter event for post ID {}: {}", event.getPostId(), e.getMessage());

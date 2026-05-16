@@ -16,7 +16,14 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOrigins(List.of(
+                        "http://localhost:4200",
+                        "http://localhost:8080",
+                        "http://13.203.196.89",
+                        "http://13.203.196.89:8080",
+                        "https://inkwell-prod.netlify.app",
+                        "https://inkwell-write-what-matters.netlify.app"
+                ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));

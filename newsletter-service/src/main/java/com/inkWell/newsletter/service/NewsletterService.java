@@ -37,26 +37,37 @@ public class NewsletterService {
     private final JavaMailSender mailSender;
 
     /**
-     * Retrieves all currently active subscribers from the database.
+     * Retrieves all currently active subscribers for a specific author.
      * 
-     * @return A list of {@link Subscriber} objects with ACTIVE status.
+     * @param authorId The ID of the author to filter by.
+     * @return A list of {@link Subscriber} objects with ACTIVE status for that author.
      */
-    public List<Subscriber> getActiveSubscribers() {
-        return subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE);
+    public List<Subscriber> getActiveSubscribers(Long authorId) {
+        if (authorId == null) {
+            return subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE);
+        }
+        return subscriberRepository.findAllByStatusAndAuthorId(SubscriptionStatus.ACTIVE, authorId);
     }
 
     /**
-     * Subscribes a new email address to the newsletter.
-     * If the subscriber already exists but is inactive, it reactivates the subscription.
-     * If it's a new subscriber, it creates a new record and sends a welcome email.
+     * Gets the count of active subscribers for an author.
+     */
+    public long getSubscribersCount(Long authorId) {
+        return subscriberRepository.countByStatusAndAuthorId(SubscriptionStatus.ACTIVE, authorId);
+    }
+
+    /**
+     * Subscribes a new email address to an author's newsletter.
      * 
      * @param email The email address to subscribe.
+     * @param authorId The ID of the author.
      */
-    public void subscribe(String email) {
-        Subscriber subscriber = subscriberRepository.findByEmail(email).orElse(null);
+    public void subscribe(String email, Long authorId) {
+        Subscriber subscriber = subscriberRepository.findByEmailAndAuthorId(email, authorId).orElse(null);
         if (subscriber == null) {
             subscriber = Subscriber.builder()
                     .email(email)
+                    .authorId(authorId)
                     .status(SubscriptionStatus.ACTIVE)
                     .build();
             subscriberRepository.save(subscriber);
@@ -107,9 +118,9 @@ public class NewsletterService {
      * @param title The title of the new post.
      * @param link The direct link to the post.
      */
-    public void notifyNewPost(String title, String link) {
-        List<Subscriber> activeSubscribers = subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE);
-        log.info("Starting newsletter campaign for '{}'. Targeting {} active subscribers.", title, activeSubscribers.size());
+    public void notifyNewPost(String title, String link, Long authorId) {
+        List<Subscriber> activeSubscribers = getActiveSubscribers(authorId);
+        log.info("Starting newsletter campaign for '{}' by author {}. Targeting {} active subscribers.", title, authorId, activeSubscribers.size());
         
         if (activeSubscribers.isEmpty()) {
             log.warn("No active subscribers found for newsletter campaign.");

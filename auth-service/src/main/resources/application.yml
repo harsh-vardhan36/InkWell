@@ -8,7 +8,7 @@ internal:
   secret: ${INTERNAL_SECRET:change-me-in-env}
 
 oauth2:
-  redirect-url: ${OAUTH2_REDIRECT_URL:http://localhost:4200/oauth2/redirect}
+  redirect-url: ${OAUTH2_REDIRECT_URL:https://inkwell-write-what-matters.netlify.app/oauth2/redirect}
 
 initial:
   admin:
@@ -60,14 +60,14 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID:default-google-id}
             client-secret: ${GOOGLE_CLIENT_SECRET:default-google-secret}
-            redirect-uri: ${GATEWAY_URL:http://localhost:8080}/login/oauth2/code/google
+            redirect-uri: ${GATEWAY_URL:https://inkwell-write-what-matters.netlify.app}/login/oauth2/code/google
             scope:
               - email
               - profile
           github:
             client-id: ${GITHUB_CLIENT_ID:default-github-id}
             client-secret: ${GITHUB_CLIENT_SECRET:default-github-secret}
-            redirect-uri: ${GATEWAY_URL:http://localhost:8080}/login/oauth2/code/github
+            redirect-uri: ${GATEWAY_URL:https://inkwell-write-what-matters.netlify.app}/login/oauth2/code/github
             scope:
               - user:email
               - read:user

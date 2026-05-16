@@ -32,7 +32,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:4200"
+            allowedOrigins: ["http://localhost:4200", "https://inkwell-write-what-matters.netlify.app", "http://13.203.196.89:8080"]
             allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
             allowedHeaders: "*"
             exposedHeaders: "Authorization"
@@ -63,10 +63,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Post Service ──────────────────────────────────────
         - id: post-service
@@ -84,10 +84,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Comment Service ───────────────────────────────────
         - id: comment-service
@@ -105,10 +105,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Category & Tag Service ────────────────────────────
         - id: category-service
@@ -128,10 +128,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Media Service ─────────────────────────────────────
         - id: media-service
@@ -149,10 +149,10 @@ spring:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Newsletter Service ────────────────────────────────
         - id: newsletter-service
@@ -161,10 +161,10 @@ spring:
             - Path=/newsletter/**, /api/newsletter/**
           filters:
             - RewritePath=/api/(?<segment>.*), /${segment}
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Notification Service ──────────────────────────────
         - id: notification-service
@@ -175,17 +175,17 @@ spring:
                 patterns:
                   - /notifications/**
                   - /api/notifications/**
-          filters:
+          filters: 
             - RewritePath=/api/(?<segment>.*), /${segment}
             - name: RequestRateLimiter
               args:
                 redis-rate-limiter.replenishRate: 5
                 redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@ipKeyResolver}"
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Admin Server ──────────────────────────────────────
         - id: admin-server
@@ -200,10 +200,10 @@ spring:
                   - /api/admin-server/**
           filters:
             - RewritePath=/api/(?<segment>.*), /${segment}
-            - name: CircuitBreaker
-              args:
-                name: defaultCircuitBreaker
-                fallbackUri: forward:/fallback
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
 
         # ── Swagger API Docs Aggregation ──────────────────────
         - id: auth-api-docs

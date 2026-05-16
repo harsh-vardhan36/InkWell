@@ -1,6 +1,7 @@
 package com.inkWell.post.resource;
 
 import com.inkWell.post.domain.entity.Post;
+import com.inkWell.post.domain.dto.AuthorStatsDTO;
 import com.inkWell.post.dto.PostDTO;
 import com.inkWell.post.repository.PostRepository;
 import com.inkWell.post.service.PostService;
@@ -33,11 +34,23 @@ public class PostResource {
                 .toList());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<PostDTO>> searchPosts(@RequestParam String query) {
+        return ResponseEntity.ok(postService.searchPosts(query).stream()
+                .map(this::convertToDTO)
+                .toList());
+    }
+
     @GetMapping("/author/{authorId}")
     public ResponseEntity<List<PostDTO>> getPostsByAuthor(@PathVariable Long authorId) {
         return ResponseEntity.ok(postRepository.findAllByAuthorId(authorId).stream()
                 .map(this::convertToDTO)
                 .toList());
+    }
+
+    @GetMapping("/author/{authorId}/stats")
+    public ResponseEntity<AuthorStatsDTO> getAuthorStats(@PathVariable Long authorId) {
+        return ResponseEntity.ok(postService.getAuthorStats(authorId));
     }
 
     @GetMapping("/category/{categoryId}")
@@ -141,5 +154,31 @@ public class PostResource {
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    // --- Bookmarks ---
+
+    @PostMapping("/{id}/bookmark")
+    public ResponseEntity<Void> bookmarkPost(@PathVariable Long id, @RequestParam Long userId) {
+        postService.bookmarkPost(userId, id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/bookmark")
+    public ResponseEntity<Void> unbookmarkPost(@PathVariable Long id, @RequestParam Long userId) {
+        postService.unbookmarkPost(userId, id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/bookmarked")
+    public ResponseEntity<List<PostDTO>> getBookmarkedPosts(@RequestParam Long userId) {
+        return ResponseEntity.ok(postService.getBookmarkedPosts(userId).stream()
+                .map(this::convertToDTO)
+                .toList());
+    }
+
+    @GetMapping("/{id}/is-bookmarked")
+    public ResponseEntity<Boolean> isBookmarked(@PathVariable Long id, @RequestParam Long userId) {
+        return ResponseEntity.ok(postService.isBookmarked(userId, id));
     }
 }

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class NewsletterRequest {
     private String title;
     private String link;
+    private Long authorId;
 }

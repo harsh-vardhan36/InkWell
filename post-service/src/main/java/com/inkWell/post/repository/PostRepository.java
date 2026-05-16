@@ -19,6 +19,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByAuthorId(Long authorId);
     List<Post> findAllByCategoryIdAndStatus(Long categoryId, PostStatus status);
     
+    @Query("SELECT p FROM Post p WHERE p.status = 'PUBLISHED' AND " +
+            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(p.excerpt) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Post> searchPublishedPosts(String query);
+    
+    @Query("SELECT SUM(p.viewCount) FROM Post p WHERE p.authorId = :authorId")
+    Long sumViewCountByAuthorId(Long authorId);
+
+    @Query("SELECT SUM(p.likeCount) FROM Post p WHERE p.authorId = :authorId")
+    Long sumLikeCountByAuthorId(Long authorId);
+
+    long countByAuthorId(Long authorId);
+    long countByAuthorIdAndStatus(Long authorId, PostStatus status);
+
     long countByStatus(PostStatus status);
     long countByIsFeaturedTrue();
 

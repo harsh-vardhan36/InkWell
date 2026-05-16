@@ -44,10 +44,10 @@ class NewsletterServiceTest {
 
     @Test
     void getActiveSubscribers_ReturnsList() {
-        when(subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE))
+        when(subscriberRepository.findAllByStatusAndAuthorId(SubscriptionStatus.ACTIVE, 1L))
                 .thenReturn(List.of(testSubscriber));
 
-        List<Subscriber> result = newsletterService.getActiveSubscribers();
+        List<Subscriber> result = newsletterService.getActiveSubscribers(1L);
 
         assertFalse(result.isEmpty());
         assertEquals("test@example.com", result.get(0).getEmail());
@@ -55,10 +55,10 @@ class NewsletterServiceTest {
 
     @Test
     void subscribe_NewUser_Success() {
-        when(subscriberRepository.findByEmail("new@ex.com")).thenReturn(Optional.empty());
+        when(subscriberRepository.findByEmailAndAuthorId("new@ex.com", 1L)).thenReturn(Optional.empty());
         when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
 
-        newsletterService.subscribe("new@ex.com");
+        newsletterService.subscribe("new@ex.com", 1L);
 
         verify(subscriberRepository).save(any(Subscriber.class));
         verify(mailSender).send(any(MimeMessage.class));
@@ -67,9 +67,9 @@ class NewsletterServiceTest {
     @Test
     void subscribe_InactiveUser_Reactivates() {
         testSubscriber.setStatus(SubscriptionStatus.UNSUBSCRIBED);
-        when(subscriberRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testSubscriber));
+        when(subscriberRepository.findByEmailAndAuthorId("test@example.com", 1L)).thenReturn(Optional.of(testSubscriber));
 
-        newsletterService.subscribe("test@example.com");
+        newsletterService.subscribe("test@example.com", 1L);
 
         assertEquals(SubscriptionStatus.ACTIVE, testSubscriber.getStatus());
         verify(subscriberRepository).save(testSubscriber);
@@ -105,33 +105,33 @@ class NewsletterServiceTest {
 
     @Test
     void notifyNewPost_SendsEmails() {
-        when(subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE))
+        when(subscriberRepository.findAllByStatusAndAuthorId(SubscriptionStatus.ACTIVE, 1L))
                 .thenReturn(List.of(testSubscriber));
         when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
 
-        newsletterService.notifyNewPost("Post Title", "http://link.com");
+        newsletterService.notifyNewPost("Post Title", "http://link.com", 1L);
 
         verify(mailSender).send(any(MimeMessage.class));
     }
 
     @Test
     void notifyNewPost_NoSubscribers_DoesNothing() {
-        when(subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE))
+        when(subscriberRepository.findAllByStatusAndAuthorId(SubscriptionStatus.ACTIVE, 1L))
                 .thenReturn(List.of());
 
-        newsletterService.notifyNewPost("Title", "Link");
+        newsletterService.notifyNewPost("Title", "Link", 1L);
 
         verify(mailSender, never()).send(any(MimeMessage.class));
     }
 
     @Test
     void notifyNewPost_MailFailure_Continues() {
-        when(subscriberRepository.findAllByStatus(SubscriptionStatus.ACTIVE))
+        when(subscriberRepository.findAllByStatusAndAuthorId(SubscriptionStatus.ACTIVE, 1L))
                 .thenReturn(List.of(testSubscriber));
         when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
         doThrow(new RuntimeException("Mail server down")).when(mailSender).send(any(MimeMessage.class));
 
         // Should not throw exception
-        assertDoesNotThrow(() -> newsletterService.notifyNewPost("Title", "Link"));
+        assertDoesNotThrow(() -> newsletterService.notifyNewPost("Title", "Link", 1L));
     }
 }

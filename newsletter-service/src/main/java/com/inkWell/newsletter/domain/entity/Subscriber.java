@@ -57,6 +57,11 @@ public class Subscriber {
     private String preferences; // Comma-separated tags
 
     /**
+     * Unique identifier of the author this subscriber is following.
+     */
+    private Long authorId;
+
+    /**
      * Timestamp when the subscriber first joined.
      */
     @CreationTimestamp

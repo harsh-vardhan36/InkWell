@@ -423,7 +423,7 @@ public class AuthServiceImpl implements AuthService {
         com.inkWell.auth.domain.entity.Follow follow = followRepository.findByFollowerIdAndFollowedId(followerId, followedId)
                 .orElseThrow(() -> new RuntimeException("Follow request not found"));
         
-        follow.setStatus("ACCEPTED");
+        follow.setStatus("APPROVED");
         followRepository.save(follow);
 
         // Sync with Newsletter service

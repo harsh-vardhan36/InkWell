@@ -1,16 +1,18 @@
 package com.inkWell.post.service;
 
 import com.inkWell.post.config.RabbitConfig;
+import com.inkWell.post.domain.entity.Bookmark;
 import com.inkWell.post.domain.entity.Post;
 import com.inkWell.post.domain.enums.PostStatus;
 import com.inkWell.post.dto.PostEvent;
+import com.inkWell.post.domain.dto.AuthorStatsDTO;
+import com.inkWell.post.repository.BookmarkRepository;
 import com.inkWell.post.repository.PostRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
@@ -23,11 +25,67 @@ import org.springframework.cache.annotation.CacheEvict;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final RabbitTemplate rabbitTemplate;
 
-    public PostService(PostRepository postRepository, RabbitTemplate rabbitTemplate) {
+    public PostService(PostRepository postRepository, 
+                       BookmarkRepository bookmarkRepository,
+                       RabbitTemplate rabbitTemplate) {
         this.postRepository = postRepository;
+        this.bookmarkRepository = bookmarkRepository;
         this.rabbitTemplate = rabbitTemplate;
+    }
+
+    public AuthorStatsDTO getAuthorStats(Long authorId) {
+        Long views = postRepository.sumViewCountByAuthorId(authorId);
+        Long likes = postRepository.sumLikeCountByAuthorId(authorId);
+        
+        return AuthorStatsDTO.builder()
+                .totalPosts(postRepository.countByAuthorId(authorId))
+                .publishedPosts(postRepository.countByAuthorIdAndStatus(authorId, PostStatus.PUBLISHED))
+                .totalViews(views != null ? views : 0L)
+                .totalLikes(likes != null ? likes : 0L)
+                .totalBookmarks(0L)
+                .build();
+    }
+
+    /**
+     * Bookmarks a post for a user.
+     */
+    public void bookmarkPost(Long userId, Long postId) {
+        if (!bookmarkRepository.existsByUserIdAndPostId(userId, postId)) {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new RuntimeException("Post not found"));
+            Bookmark bookmark = Bookmark.builder()
+                    .userId(userId)
+                    .post(post)
+                    .build();
+            bookmarkRepository.save(bookmark);
+        }
+    }
+
+    /**
+     * Removes a bookmark for a user.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void unbookmarkPost(Long userId, Long postId) {
+        bookmarkRepository.deleteByUserIdAndPostId(userId, postId);
+    }
+
+    /**
+     * Gets all posts bookmarked by a user.
+     */
+    public List<Post> getBookmarkedPosts(Long userId) {
+        return bookmarkRepository.findAllByUserId(userId).stream()
+                .map(Bookmark::getPost)
+                .toList();
+    }
+
+    /**
+     * Checks if a post is bookmarked by a user.
+     */
+    public boolean isBookmarked(Long userId, Long postId) {
+        return bookmarkRepository.existsByUserIdAndPostId(userId, postId);
     }
 
     /**
@@ -51,6 +109,16 @@ public class PostService {
      */
     public List<Post> getPostsByCategory(Long categoryId) {
         return postRepository.findAllByCategoryIdAndStatus(categoryId, PostStatus.PUBLISHED);
+    }
+
+    /**
+     * Searches published posts by query.
+     */
+    public List<Post> searchPosts(String query) {
+        if (query == null || query.isBlank()) {
+            return getAllPublishedPosts();
+        }
+        return postRepository.searchPublishedPosts(query);
     }
 
 
@@ -97,6 +165,7 @@ public class PostService {
                     .authorName(savedPost.getAuthorName() != null ? savedPost.getAuthorName() : "InkWell Author")
                     .categoryName("General")
                     .slug(savedPost.getSlug())
+                    .authorId(savedPost.getAuthorId())
                     .build();
             
             rabbitTemplate.convertAndSend(RabbitConfig.POST_EXCHANGE, RabbitConfig.POST_ROUTING_KEY, event);

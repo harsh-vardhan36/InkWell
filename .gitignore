@@ -25,11 +25,8 @@
 *.log
 logs/
 
-# === Excludes for feature/UC1 ===
-docker-compose.yml
-deploy-to-aws.sh
-run-sonar.sh
-*.pem
+# === Utilities and Deployment ===
+Project-utils/
 *.md
 !README.md
 !Readme.md

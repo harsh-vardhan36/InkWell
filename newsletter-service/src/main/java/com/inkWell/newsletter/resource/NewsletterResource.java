@@ -26,10 +26,18 @@ public class NewsletterResource {
      * @return A {@link ResponseEntity} containing a list of active {@link Subscriber}s.
      */
     @GetMapping("/subscribers")
-    public ResponseEntity<java.util.List<SubscriberDTO>> getActiveSubscribers() {
-        return ResponseEntity.ok(newsletterService.getActiveSubscribers().stream()
+    public ResponseEntity<java.util.List<SubscriberDTO>> getActiveSubscribers(@RequestParam(required = false) Long authorId) {
+        return ResponseEntity.ok(newsletterService.getActiveSubscribers(authorId).stream()
                 .map(this::convertToDTO)
                 .toList());
+    }
+
+    /**
+     * Gets the active subscriber count for a specific author.
+     */
+    @GetMapping("/subscribers/count")
+    public ResponseEntity<Long> getSubscribersCount(@RequestParam Long authorId) {
+        return ResponseEntity.ok(newsletterService.getSubscribersCount(authorId));
     }
 
     private SubscriberDTO convertToDTO(Subscriber subscriber) {
@@ -49,8 +57,8 @@ public class NewsletterResource {
      * @return A {@link ResponseEntity} with a success message.
      */
     @PostMapping("/subscribe")
-    public ResponseEntity<Map<String, String>> subscribe(@RequestParam String email) {
-        newsletterService.subscribe(email);
+    public ResponseEntity<Map<String, String>> subscribe(@RequestParam String email, @RequestParam Long authorId) {
+        newsletterService.subscribe(email, authorId);
         return ResponseEntity.ok(Map.of("message", "Subscribed successfully"));
     }
 
@@ -62,9 +70,9 @@ public class NewsletterResource {
      * @return A {@link ResponseEntity} with NO_CONTENT status upon success.
      */
     @PostMapping("/notify-new-post")
-    public ResponseEntity<Void> notifyNewPost(@RequestBody com.inkWell.newsletter.dto.NewsletterRequest request) {
-        newsletterService.notifyNewPost(request.getTitle(), request.getLink());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, String>> notifyNewPost(@RequestBody com.inkWell.newsletter.dto.NewsletterRequest request) {
+        newsletterService.notifyNewPost(request.getTitle(), request.getLink(), request.getAuthorId());
+        return ResponseEntity.ok(Map.of("message", "Campaign launched successfully"));
     }
 
     /**
